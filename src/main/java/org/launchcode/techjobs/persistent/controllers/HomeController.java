@@ -49,13 +49,16 @@ public class HomeController {
 
     @PostMapping("add")
     public String processAddJobForm(@ModelAttribute @Valid Job newJob,
-                                       Errors errors, Model model, @RequestParam int employerId, @RequestParam List<Integer> skills) {
-        employerRepository.findById(employerId);
+                                       Errors errors, Model model, @RequestParam Integer employerId, @RequestParam List<Integer> skills) {
+
 
         if (errors.hasErrors()) {
             model.addAttribute("title", "Add Job");
             return "add";
         } else {
+            Optional<Employer> result = employerRepository.findById(employerId);
+            Employer employer = result.get();
+            newJob.setEmployer(employer);
             List<Skill> skillObjs = (List<Skill>) skillRepository.findAllById(skills);
             newJob.setSkills(skillObjs);
             jobRepository.save(newJob);
@@ -65,10 +68,15 @@ public class HomeController {
 
     @GetMapping("view/{jobId}")
     public String displayViewJob(Model model, @PathVariable int jobId) {
-//        Optional<Job> result = jobRepository.findById(jobId);
-//        Job job = result.get();
-//        model.addAttribute("job", job);
-        return "view";
+        Optional optJob = jobRepository.findById(jobId);
+        if (optJob.isPresent()) {
+            Job job = (Job) optJob.get();
+            model.addAttribute("job", job);
+            return "view";
+        } else {
+            return "redirect:";
+        }
+
     }
 
 
